@@ -1,4 +1,6 @@
 ﻿using System.Collections.Concurrent;
+using System.Net;
+using System.Text;
 using System.Text.Json;
 
 namespace BinanceConsole;
@@ -16,7 +18,18 @@ internal class Program
 
     private static void Main(string[] args)
     {
-        Console.WriteLine("Enter the trade pairs (ex bnb/usdt, eth/btc)");
+        var symbols = GetBinanceSymbols();
+        Console.Clear();
+
+        if (symbols.Count == 0)
+        {
+            return;
+        }
+
+        Console.WriteLine("Binance SPOT symbols:");
+        Console.WriteLine(string.Join(", ", symbols));
+
+        Console.WriteLine("\nEnter the trade pairs (ex BNB/USDT, ETH/BTC)");
         string? input = Console.ReadLine();
         string[]? pairs = input?.Split(',');
 
@@ -45,6 +58,38 @@ internal class Program
         cleanUpThread.Start();
 
         Console.ReadKey();
+    }
+
+    private static List<string> GetBinanceSymbols()
+    {
+        Console.WriteLine("Getting Binance exchange info...");
+
+        string url = "https://api.binance.com/api/v3/exchangeInfo";
+        HttpWebRequest request = WebRequest.CreateHttp(url);
+        request.Method = "GET";
+
+        using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+        using Stream responseStream = response.GetResponseStream();
+        using StreamReader streamReader = new StreamReader(responseStream, Encoding.UTF8);
+
+        var jsonResponse = streamReader.ReadToEnd();
+        var exchangeInfo = JsonSerializer.Deserialize<ExchangeInfo>(jsonResponse);
+
+        if (exchangeInfo is null)
+        {
+            return [];
+        }
+
+        var spotSymbols = new List<string>();
+        for (int i = 0; i < exchangeInfo.Symbols.Count; i++)
+        {
+            if (exchangeInfo.Symbols[i].Permissions.Contains("SPOT"))
+            {
+                spotSymbols.Add($"{exchangeInfo.Symbols[i].BaseAsset}/{exchangeInfo.Symbols[i].QuoteAsset}");
+            }
+        }
+
+        return spotSymbols;
     }
 
     private static void PrintTradeData()

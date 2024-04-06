@@ -2,7 +2,7 @@
 
 namespace BinanceConsole;
 
-public class Trade
+public sealed class Trade
 {
     [JsonPropertyName("e")]
     public string EventType { get; set; }
