@@ -4,10 +4,10 @@ using System.Text;
 
 namespace BinanceConsole;
 
-public class TradeSubscriber(string tradePair, ConcurrentDictionary<string, (Queue<string> Storage, Queue<string> Display)> tradeData)
+public class TradeSubscriber(string tradePair, ConcurrentDictionary<string, (ConcurrentQueue<string> Storage, ConcurrentQueue<string> Display)> tradeData)
 {
     private readonly string _tradePair = tradePair;
-    private readonly ConcurrentDictionary<string, (Queue<string> Storage, Queue<string> Display)> _tradeData = tradeData;
+    private readonly ConcurrentDictionary<string, (ConcurrentQueue<string> Storage, ConcurrentQueue<string> Display)> _tradeData = tradeData;
     private const string BINANCE_WEB_SOCKET_URL = "wss://fstream.binance.com/ws/";
 
     public void SubscribeToTrade()

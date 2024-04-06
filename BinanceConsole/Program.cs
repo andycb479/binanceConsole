@@ -14,7 +14,7 @@ internal class Program
     private const ConsoleColor BUY_COLOR = ConsoleColor.Green;
     private const ConsoleColor SELL_COLOR = ConsoleColor.Red;
 
-    private static readonly ConcurrentDictionary<string, (Queue<string> Storage, Queue<string> Display)> _tradeData = new();
+    private static readonly ConcurrentDictionary<string, (ConcurrentQueue<string> Storage, ConcurrentQueue<string> Display)> _tradeData = new();
 
     private static void Main(string[] args)
     {
@@ -42,7 +42,7 @@ internal class Program
         {
             var tradePair = pairs[i].Trim().ToLower();
 
-            if (!_tradeData.TryAdd(tradePair, (new Queue<string>(), new Queue<string>())))
+            if (!_tradeData.TryAdd(tradePair, (new ConcurrentQueue<string>(), new ConcurrentQueue<string>())))
             {
                 continue;
             }
@@ -121,14 +121,14 @@ internal class Program
             for (int pairIndex = 0; pairIndex < _tradeData.Keys.Count; pairIndex++)
             {
                 string pair = _tradeData.Keys.ElementAt(pairIndex);
-                Queue<string> pairStorage = _tradeData[pair].Storage;
+                ConcurrentQueue<string> pairStorage = _tradeData[pair].Storage;
 
                 if (pairStorage.Count <= MAX_TRADES_TO_KEEP) continue;
 
                 int tradesToDequeue = pairStorage.Count - MAX_TRADES_TO_KEEP;
                 for (int i = 0; i < tradesToDequeue; i++)
                 {
-                    pairStorage.Dequeue();
+                    pairStorage.TryDequeue(out _);
                 }
 
                 Console.WriteLine($"CLEANED UP {tradesToDequeue} TRADES FOR {pair}");
